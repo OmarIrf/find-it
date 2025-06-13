@@ -10,21 +10,29 @@
 </head>
 <body>
 
-    <!-- Simple site header -->
+    <!-- Site Header -->
     <header>
-        <div class="container">
+        <div class="container header-flex">
             <h1>Find It</h1>
-            <nav>
-                <ul>
-                    <li><a href="#report-lost">Report Lost Item</a></li>
-                    <li><a href="#found-items">View Found Items</a></li>
-                    <li><a href="#about">About Us</a></li>
-                </ul>
-            </nav>
+            
+            <div class="nav-login-group">
+                <nav>
+                    <ul>
+                        <li><a href="#report-lost">Report Lost Item</a></li>
+                        <li><a href="#found-items">View Found Items</a></li>
+                        <li><a href="#about">About Us</a></li>
+                    </ul>
+                </nav>
+
+                <div class="login-buttons">
+                    <button onclick="window.location.href='/admin-login'">Admin Login</button>
+                    <button onclick="window.location.href='/user-login'">Login</button>
+                </div>
+            </div>
         </div>
     </header>
 
-    <!-- Dynamic page content -->
+    <!-- Dynamic Page Content -->
     {% block content %}{% endblock %}
 
     <!-- Footer -->
