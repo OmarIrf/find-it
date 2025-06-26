@@ -13,7 +13,13 @@
     <!-- Header -->
     <header>
         <div class="container header-flex">
-            <h1><a href="{{ url_for('routes.index') }}" class="logo-link">Find It</a></h1>
+            <h1 class="logo">
+                <a href="{{ url_for('routes.index') }}" class="logo-link">
+                    <img src="{{ url_for('static', filename='images/findit-logo.png') }}"
+                         alt="Find It logo"
+                         style="height: 40px;">
+                </a>
+            </h1>
 
             <div class="nav-login-group">
                 <nav>
