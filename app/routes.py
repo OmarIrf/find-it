@@ -8,6 +8,7 @@ from app import socketio
 from flask_socketio import emit
 
 routes = Blueprint("routes", __name__)
+connected_users = set()
 
 # Admin routes
 def admin_required(f):
@@ -23,7 +24,9 @@ def admin_required(f):
 # Routes 
 @routes.route("/")
 def index():
-    return render_template("index.html")
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    return render_template('index.html', t=t, lang=lang)
 
 @routes.route("/login", methods=["GET", "POST"])
 def login():
@@ -37,7 +40,9 @@ def login():
             flash("Login successful!", "success")
             return redirect(url_for("routes.index"))
         flash("Invalid credentials", "danger")
-    return render_template("login.html", form=form)
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    return render_template("login.html", t=t, lang=lang, form=form)
 
 @routes.route("/register", methods=["GET", "POST"])
 def register():
@@ -56,7 +61,9 @@ def register():
         db.session.commit()
         flash("Registration successful. Please log in.", "success")
         return redirect(url_for("routes.login"))
-    return render_template("register.html", form=form)
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    return render_template("register.html", t=t, lang=lang, form=form)
 
 @routes.route("/logout")
 def logout():
@@ -80,13 +87,17 @@ def report_item():
         db.session.commit()
         flash("Item reported successfully!", "success")
         return redirect(url_for("routes.view_items"))
-    return render_template("report.html", form=form)
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    return render_template("report.html", t=t, lang=lang, form=form)
 
 @routes.route('/items')
 def view_items():
     lost_items = Item.query.filter_by(item_type='lost').order_by(Item.date_reported.desc()).all()
     found_items = Item.query.filter_by(item_type='found').order_by(Item.date_reported.desc()).all()
-    return render_template('items.html', lost_items=lost_items, found_items=found_items)
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    return render_template('items.html', t=t, lang=lang, lost_items=lost_items, found_items=found_items)
 
 # Admin Dashboard 
 @routes.route('/admin')
@@ -94,7 +105,9 @@ def view_items():
 def admin_dashboard():
     users = User.query.all()
     items = Item.query.all()
-    return render_template('admin.html', users=users, items=items)
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    return render_template('admin.html', users=users, items=items, t=t, lang=lang)
 
 @routes.route('/admin/toggle/<int:user_id>', methods=["POST"])
 @admin_required
@@ -130,9 +143,9 @@ def edit_item(item_id):
 
 @routes.route('/code-of-conduct')
 def code_of_conduct():
-    return render_template('code_of_conduct.html')
-
-from flask import render_template, request
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    return render_template('code_of_conduct.html', t=t, lang=lang)
 
 translations = {
     'en': {
@@ -153,21 +166,18 @@ translations = {
     }
 }
 
-@app.route('/')
-def index():
-    lang = request.args.get('lang', 'en')
-    t = translations.get(lang, translations['en'])
-    return render_template('index.html', t=t, lang=lang)
-
 @routes.route('/chat')
 def chat():
-    if 'username' not in session:
+    if 'user_name' not in session:
         return redirect(url_for('routes.login'))
-    return render_template('chat.html', username=session['username'])
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    return render_template('chat.html', t=t, lang=lang, username=session['user_name'])
 
 
 @socketio.on('message')
 def handle_message(msg):
-    username = session.get('userrname', 'Unknown')
-    full_msg = f"{username}: {msg}"
+    username = session.get('user_name', 'Unknown')
+    timestamp = datetime.now().strftime('%I:%M %p')  # e.g., "03:45 PM"
+    full_msg = f"[{timestamp}] {username}: {msg}"
     emit('message', full_msg, broadcast=True)
