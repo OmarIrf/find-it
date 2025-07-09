@@ -75,6 +75,26 @@
         </div>
     </header>
 
+    <!-- Language Selection -->
+    <li><a href="{{ url_for('routes.index') }}?lang={{ lang }}">{{ t['home'] }}</a></li>
+<li><a href="{{ url_for('routes.report_item') }}?lang={{ lang }}">{{ t['report_item'] }}</a></li>
+<li><a href="{{ url_for('routes.view_items') }}?lang={{ lang }}">{{ t['found_items'] }}</a></li>
+<li><a href="{{ url_for('routes.code_of_conduct') }}?lang={{ lang }}">{{ t['code_of_conduct'] }}</a></li>
+
+<span style="margin-bottom: 5px;">{{ t['welcome'] }}, {{ session['user_name'] }}!</span>
+
+<p>&copy; 2025 Find It. {{ t['all_rights'] }}</p>
+
+
+   <!-- Language Dropdown -->
+    <form method="get" action="" style="margin-left: 20px;">
+  <select name="lang" onchange="this.form.submit()">
+    <option value="en" {% if lang == 'en' %}selected{% endif %}>English</option>
+    <option value="es" {% if lang == 'es' %}selected{% endif %}>Español</option>
+  </select>
+</form>
+
+
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
