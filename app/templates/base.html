@@ -48,18 +48,29 @@
             <div class="nav-login-group">
                 <nav>
                     <ul>
-                        <li><a href="{{ url_for('routes.index') }}">Home</a></li>
-                        <li><a href="{{ url_for('routes.report_item') }}">Report Item</a></li>
-                        <li><a href="{{ url_for('routes.view_items') }}">Found Items</a></li>
-                        <li><a href="{{ url_for('routes.code_of_conduct') }}">Code Of Conduct</a></li>
+                        <li><a href="{{ url_for('routes.index') }}?lang={{ lang }}">{{ t['home'] }}</a></li>
+                        <li><a href="{{ url_for('routes.report_item') }}?lang={{ lang }}">{{ t['report_item'] }}</a>
+                        </li>
+                        <li><a href="{{ url_for('routes.view_items') }}?lang={{ lang }}">{{ t['found_items'] }}</a></li>
+                        <li><a href="{{ url_for('routes.code_of_conduct') }}?lang={{ lang }}">{{ t['code_of_conduct']
+                                }}</a></li>
                     </ul>
                 </nav>
 
                 <div class="login-buttons" style="display: flex; flex-direction: column; align-items: flex-end;">
                     {% if session.get('user_name') %}
-                    <span style="margin-bottom: 5px;">Welcome, {{ session['user_name'] }}!</span>
+                    <span style="margin-bottom: 5px;">{{ t['welcome'] }}, {{ session['user_name'] }}!</span>
                     <div style="display: flex; gap: 10px;">
                         <button onclick="window.location.href='{{ url_for('routes.logout') }}'">Logout</button>
+                        <a href="{{ url_for('routes.inbox') }}"
+                            style="background-color: #007bff; color: white; padding: 6px 12px; border-radius: 5px; font-weight: bold; text-decoration: none; position: relative; display: inline-block;">
+                            📥
+                            {% if session.get('unread_count', 0) > 0 %}
+                            <span
+                                style="position: absolute; top: -6px; right: -6px; background: red; color: white; font-size: 0.75em; border-radius: 50%; padding: 2px 6px;">{{
+                                session.unread_count }}</span>
+                            {% endif %}
+                        </a>
                         {% if session.get('is_admin') %}
                         <button onclick="window.location.href='{{ url_for('routes.admin_dashboard') }}'">Admin</button>
                         {% endif %}
@@ -70,30 +81,19 @@
                         <button onclick="window.location.href='{{ url_for('routes.register') }}'">Register</button>
                     </div>
                     {% endif %}
+                    <div class="navbar-right-group">
+                        <form method="get" onchange="this.submit()" style="display: inline;">
+                            <select name="lang" class="language-select">
+                                <option value="en" {% if lang=='en' %}selected{% endif %}>🌐 EN</option>
+                                <option value="es" {% if lang=='es' %}selected{% endif %}>🌐 ES</option>
+                            </select>
+                        </form>
+                    </div>
+
                 </div>
             </div>
         </div>
     </header>
-
-    <!-- Language Selection -->
-    <li><a href="{{ url_for('routes.index') }}?lang={{ lang }}">{{ t['home'] }}</a></li>
-<li><a href="{{ url_for('routes.report_item') }}?lang={{ lang }}">{{ t['report_item'] }}</a></li>
-<li><a href="{{ url_for('routes.view_items') }}?lang={{ lang }}">{{ t['found_items'] }}</a></li>
-<li><a href="{{ url_for('routes.code_of_conduct') }}?lang={{ lang }}">{{ t['code_of_conduct'] }}</a></li>
-
-<span style="margin-bottom: 5px;">{{ t['welcome'] }}, {{ session['user_name'] }}!</span>
-
-<p>&copy; 2025 Find It. {{ t['all_rights'] }}</p>
-
-
-   <!-- Language Dropdown -->
-    <form method="get" action="" style="margin-left: 20px;">
-  <select name="lang" onchange="this.form.submit()">
-    <option value="en" {% if lang == 'en' %}selected{% endif %}>English</option>
-    <option value="es" {% if lang == 'es' %}selected{% endif %}>Español</option>
-  </select>
-</form>
-
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -111,10 +111,10 @@
         {% block content %}{% endblock %}
     </main>
 
-
+    <!-- Footer -->
     <footer>
         <div class="container">
-            <p>&copy; 2025 Find It. All rights reserved.</p>
+            <p>&copy; 2025 Find It. {{ t['all_rights'] }}</p>
         </div>
     </footer>
 

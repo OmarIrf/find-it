@@ -1,0 +1,118 @@
+body {
+    background-color: #f5f6fa;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.inbox-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+.inbox-card {
+    width: 100%;
+    max-width: 600px;
+    background: #fff;
+    padding: 20px 25px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.inbox-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.inbox-header h2 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.new-message-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.inbox-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.inbox-item {
+    display: flex;
+    align-items: center;
+    background: #f9f9f9;
+    border-radius: 12px;
+    padding: 12px;
+    text-decoration: none;
+    color: #333;
+    transition: background 0.2s;
+    position: relative;
+}
+
+.inbox-item:hover {
+    background: #e9efff;
+}
+
+.inbox-avatar {
+    width: 40px;
+    height: 40px;
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.inbox-content {
+    flex: 1;
+}
+
+.inbox-name-time {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.inbox-preview {
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+    display: inline-block;    
+    color: #777;
+    font-size: 14px;
+}
+
+.red-dot {
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    border-radius: 50%;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}
+
+.unread {
+    font-weight: bold;
+}
+
+.empty-inbox {
+    text-align: center;
+    color: #999;
+    font-size: 16px;
+    margin-top: 20px;
+}

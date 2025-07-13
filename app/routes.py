@@ -1,14 +1,28 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request, abort
 from .forms import LoginForm, RegisterForm, ItemForm
-from .models import db, User, Item
+from .models import db, User, Item, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
 from app import socketio
-from flask_socketio import emit
+from flask_socketio import emit, join_room
+from sqlalchemy.orm import joinedload
 
 routes = Blueprint("routes", __name__)
 connected_users = set()
+# Index Route
+@routes.route("/")
+def index():
+    recent_items = Item.query.order_by(Item.date_reported.asc()).limit(9).all()
+
+    lang = request.args.get("lang", "en")
+    t = translations.get(lang, translations["en"])
+    return render_template(
+        "index.html",
+        t=t,
+        lang=lang,
+        recent_items=recent_items
+    )
 
 # Admin routes
 def admin_required(f):
@@ -21,12 +35,13 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Routes 
-@routes.route("/")
-def index():
-    lang = request.args.get('lang', 'en')
-    t = translations.get(lang, translations['en'])
-    return render_template('index.html', t=t, lang=lang)
+# Login Routes 
+@routes.before_app_request
+def refresh_unread_count():
+    if 'user_id' in session:
+        count = Message.query.filter_by(recipient_id=session['user_id'], read=False).count()
+        session['unread_count'] = count
+
 
 @routes.route("/login", methods=["GET", "POST"])
 def login():
@@ -71,8 +86,13 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for('routes.index'))
 
+# Report Item Route
 @routes.route("/report", methods=["GET", "POST"])
 def report_item():
+    if 'user_id' not in session:
+        flash("You must be logged in to report an item.", "warning")
+        return redirect(url_for('routes.login'))
+
     form = ItemForm()
     if form.validate_on_submit():
         new_item = Item(
@@ -89,8 +109,9 @@ def report_item():
         return redirect(url_for("routes.view_items"))
     lang = request.args.get('lang', 'en')
     t = translations.get(lang, translations['en'])
-    return render_template("report.html", t=t, lang=lang, form=form)
+    return render_template("report.html", form=form, t=t, lang=lang)
 
+# Lost/Found Items Route
 @routes.route('/items')
 def view_items():
     lost_items = Item.query.filter_by(item_type='lost').order_by(Item.date_reported.desc()).all()
@@ -154,7 +175,20 @@ translations = {
         'found_items': 'Found Items',
         'code_of_conduct': 'Code of Conduct',
         'welcome': 'Welcome',
-        'all_rights': 'All rights reserved.'
+        'all_rights': 'All rights reserved.',
+        'chat_room': 'Chat Room',
+        'lost_found': 'Your Campus Lost & Found Solution',
+        'reunite': 'Help us reunite lost items with their owners on campus!',
+        'recently_reported_item': 'Recently Reported Items',
+        'find_it': 'About Find It',
+        'find_it_description': 'Find It is a community-driven platform designed to help students and staff on campus reunite with their lost belongings.',
+        'contact': 'Contact',
+        'found_near': 'Found Near',
+        'lost_near': 'Lost Near',
+        'description_tr': 'Description',
+        'date_tr': 'Date',
+        'lost_tr': 'Lost',
+        'found_tr': 'Found',
     },
     'es': {
         'home': 'Inicio',
@@ -162,7 +196,20 @@ translations = {
         'found_items': 'Objetos encontrados',
         'code_of_conduct': 'Código de conducta',
         'welcome': 'Bienvenido',
-        'all_rights': 'Todos los derechos reservados.'
+        'all_rights': 'Todos los derechos reservados.',
+        'chat_room': 'Sala de Chat',
+        'lost_found': 'Su solución para objetos perdidos en el campus',
+        'reunite': '¡Ayúdanos a reunir artículos perdidos con sus dueños en el campus!',
+        'recently_reported_item': 'Artículos peportados recientemente',
+        'find_it': 'Acerca de Encuéntralo',
+        'find_it_description': 'Encuéntralo es una plataforma comunitaria diseñada para ayudar a los estudiantes y al personal del campus a reencontrarse con sus pertenencias perdidas.',
+        'contact': 'Contacto',
+        'found_near': 'Encontrado cerca de',
+        'lost_near': 'Perdido cerca de',
+        'description_tr': 'Descripción',
+        'date_tr': 'Fecha',
+        'lost_tr': 'Perdido',
+        'found_tr': 'Encontrado',
     }
 }
 
@@ -181,3 +228,112 @@ def handle_message(msg):
     timestamp = datetime.now().strftime('%I:%M %p')  # e.g., "03:45 PM"
     full_msg = f"[{timestamp}] {username}: {msg}"
     emit('message', full_msg, broadcast=True)
+
+
+
+# Direct messaging for users
+@routes.route('/message/<int:user_id>', methods=['GET', 'POST'])
+def message_user(user_id):
+    if 'user_id' not in session:
+        return redirect(url_for('routes.login'))
+
+    recipient = User.query.get_or_404(user_id)
+    sender_id = session['user_id']
+
+    if request.method == 'POST':
+        content = request.form['content']
+        message = Message(sender_id=sender_id, recipient_id=recipient.user_id, content=content)
+        db.session.add(message)
+        db.session.commit()
+        update_unread_count()  # Refresh unread counter after sending
+        return redirect(url_for('routes.message_user', user_id=user_id))
+
+    # Fetch message history
+    messages = Message.query.filter(
+        ((Message.sender_id == sender_id) & (Message.recipient_id == recipient.user_id)) |
+        ((Message.sender_id == recipient.user_id) & (Message.recipient_id == sender_id))
+    ).order_by(Message.timestamp).all()
+
+    # Mark unread messages as read (those sent *to* current user)
+    for msg in messages:
+        if msg.recipient_id == sender_id and not msg.read:
+            msg.read = True
+    db.session.commit()
+
+    update_unread_count()  # Refresh unread counter after reading
+
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    return render_template('direct_message.html', recipient=recipient, messages=messages, t=t, lang=lang)
+
+@routes.before_app_request
+def update_unread_count():
+    if 'user_id' in session:
+        count = Message.query.filter_by(recipient_id=session['user_id'], read=False).count()
+        session['unread_count'] = count
+
+
+
+@socketio.on('private_message')
+def handle_private_message(data):
+    recipient_id = data['recipient_id']
+    sender = data['sender']
+    message = data['message']
+    room = f"user_{recipient_id}"
+    emit('private_message', {'sender': sender, 'message': message}, room=room)
+
+@socketio.on('connect')
+def on_connect():
+    user_id = session.get('user_id')
+    if user_id:
+        join_room(f"user_{user_id}")
+
+# Inbox Route for DM
+@routes.route('/inbox')
+def inbox():
+    if 'user_id' not in session:
+        return redirect(url_for('routes.login'))
+
+    user_id = session['user_id']
+
+    # Fetch all messages involving the current user
+    messages = Message.query.filter(
+        (Message.sender_id == user_id) | (Message.recipient_id == user_id)
+    ).order_by(Message.timestamp.desc()).all()
+
+    # Build conversations: {partner_id: last_message}
+    conversations = {}
+    for msg in messages:
+        partner_id = msg.sender_id if msg.sender_id != user_id else msg.recipient_id
+        if partner_id not in conversations:
+            conversations[partner_id] = msg
+
+    # Prepare conversation details
+    partners = []
+    for other_id, last_msg in conversations.items():
+        user = User.query.get(other_id)
+
+        # Count unread messages FROM this user TO current user
+        has_unread = Message.query.filter_by(
+            sender_id=other_id,
+            recipient_id=user_id,
+            read=False
+        ).count() > 0
+
+        partners.append({
+            'user': user,
+            'last_message': last_msg,
+            'unread': has_unread,
+            'last_sender_id': last_msg.sender_id if last_msg else None
+        })
+
+    # Store unread count in session for navbar
+    unread_count = Message.query.filter_by(recipient_id=user_id, read=False).count()
+    session['unread_count'] = unread_count
+
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    return render_template('inbox.html', t=t, lang=lang, conversations=partners)
+
+
+

@@ -1,0 +1,125 @@
+/* Wrapper centers the chat box */
+.dm-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
+/* Outer container */
+.dm-container {
+  width: 100%;
+  max-width: 600px;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background-color: #fff;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Header */
+.dm-header {
+  padding: 16px 20px;
+  background-color: #f9f9f9;
+  font-size: 1.2em;
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.back-to-inbox {
+  color: #007bff;
+  font-size: 0.9em;
+  text-decoration: none;
+}
+
+/* Chat bubbles */
+.dm-chat {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: #f2f2f2;
+}
+
+.chat-bubble {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 0.95em;
+  line-height: 1.4em;
+  word-break: break-word;
+  position: relative;
+}
+
+.chat-bubble.sent {
+  align-self: flex-end;
+  background-color: #d2f8d2;
+  border-bottom-right-radius: 0;
+}
+
+.chat-bubble.received {
+  align-self: flex-start;
+  background-color: #fff;
+  border-bottom-left-radius: 0;
+}
+
+.chat-time {
+  font-size: 0.75em;
+  color: #888;
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* Input section */
+.dm-input {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #fff;
+  border-top: 1px solid #ccc;
+  gap: 10px;
+}
+
+.dm-textarea-wrapper {
+  flex: 1;
+}
+
+.dm-input textarea {
+  width: 100%;
+  min-height: 38px;
+  max-height: 120px;
+  padding: 10px 14px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  resize: vertical;
+  font-size: 0.95em;
+  overflow-y: auto;
+}
+
+.dm-send-wrapper {
+  flex-shrink: 0;
+}
+
+.dm-input button {
+  padding: 0 18px;
+  height: 38px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+
+
+

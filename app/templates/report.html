@@ -1,13 +1,89 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Report Lost or Found Item</h2>
-<form method="POST">
-    {{ form.hidden_tag() }}
-    <div>{{ form.title.label }} {{ form.title() }}</div>
-    <div>{{ form.description.label }} {{ form.description() }}</div>
-    <div>{{ form.item_type.label }} {{ form.item_type() }}</div>
-    <div>{{ form.date_reported.label }} {{ form.date_reported() }}</div>
-    <div>{{ form.location.label }} {{ form.location() }}</div>
-    <div>{{ form.submit() }}</div>
-</form>
+<style>
+    .report-container {
+        max-width: 700px;
+        margin: 30px auto;
+        padding: 30px;
+        background-color: #bf311a;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .report-container h2 {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        font-size: 15px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: #007bff;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .submit-btn:hover {
+        background-color: #0069d9;
+    }
+</style>
+
+<div class="report-container" style= 'color: #fdb913' >
+    <h2 style= 'color: #fdb913'>Report a Lost or Found Item</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.title.label }}
+            {{ form.title(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.location.label }}
+            {{ form.location(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.description.label }}
+            {{ form.description(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.item_type.label }}
+            {{ form.item_type(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.date_reported.label }}
+            {{ form.date_reported(class="form-control") }}
+        </div>
+        <div class="form-group">
+            {{ form.submit(class="submit-btn") }}
+        </div>
+    </form>
+</div>
 {% endblock %}

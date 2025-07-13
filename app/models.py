@@ -1,5 +1,6 @@
 
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -20,4 +21,18 @@ class Item(db.Model):
     location = db.Column(db.String(100))
     user_id = db.Column(db.Integer, db.ForeignKey("user.user_id"))
     contact_info = db.Column(db.String(100))
+
+    user = db.relationship("User", backref=db.backref("reported_items", lazy=True))
+
+class Message(db.Model):
+    message_id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
+    recipient_id = db.Column(db.Integer, db.ForeignKey('user.user_id'))
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
+    recipient = db.relationship('User', foreign_keys=[recipient_id], backref='received_messages')
+
+    read = db.Column(db.Boolean, default=False)
 

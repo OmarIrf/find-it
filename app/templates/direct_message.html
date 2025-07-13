@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+
+<div class="dm-wrapper">
+    <div class="dm-container">
+        <div class="dm-header">
+            <h2>{{ recipient.name }}</h2>
+            <a href="{{ url_for('routes.inbox') }}" class="back-to-inbox">← Inbox</a>
+        </div>
+
+        <div class="dm-chat" id="chat-box">
+            {% for msg in messages %}
+            <div class="chat-bubble {% if msg.sender_id == session['user_id'] %}sent{% else %}received{% endif %}">
+                <div>{{ msg.content }}</div>
+                <span class="chat-time">{{ msg.timestamp.strftime('%I:%M %p') }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+<form method="POST" class="dm-input">
+    <div class="dm-textarea-wrapper">
+        <textarea name="content" required placeholder="Message..."></textarea>
+    </div>
+    <div class="dm-send-wrapper">
+        <button type="submit">Send</button>
+    </div>
+</form>
+
+
+    </div>
+</div>
+
+<script>
+    const chatBox = document.getElementById('chat-box');
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const textarea = document.querySelector('textarea[name="content"]');
+    textarea.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            this.form.submit();
+        }
+    });
+</script>
+{% endblock %}
