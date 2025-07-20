@@ -5,92 +5,56 @@
 
 <main class="container">
     <section id="hero">
-        <h2>Your Campus Lost & Found Solution</h2>
-        <p>Help us reunite lost items with their owners on campus!</p>
+        <h2>{{ t['lost_found'] }}</h2>
+        <p>{{ t['reunite'] }}</p>
 
         <div class="test-buttons">
-            <button onclick="window.location.href='{{ url_for('routes.report_item') }}'"> Report Item</button>
-            <button onclick="window.location.href='{{ url_for('routes.view_items') }}'"> View All Items</button>
-            <button onclick="window.location.href='{{ url_for('routes.chat') }}'">Chat Room</button>
-            <button onclick="window.location.href='{{ url_for('routes.code_of_conduct') }}'">Code of Conduct</button>
+            <button onclick="location.href='{{ url_for('routes.report_item', lang=lang) }}'">
+                {{ t['report_item'] }}
+            </button>
+            <button onclick="location.href='{{ url_for('routes.view_items', lang=lang) }}'">
+                {{ t['found_items'] }}
+            </button>
+            <button onclick="location.href='{{ url_for('routes.chat', lang=lang) }}'">
+                {{ t['chat_room'] }}
+            </button>
         </div>
     </section>
 
-    <section id="report-lost" class="form-section">
-        <h2>Report a Lost Item</h2>
-        <form id="lostItemForm">
-            <div class="form-group">
-                <label for="itemNameLost">Item Name:</label>
-                <input type="text" id="itemNameLost" required>
+    <section class="items-display-section" style="background: #bf311a">
+        <h2 style="color: #fdb913"><i class="fas fa-box-open"></i> {{ t['recently_reported_item'] }}</h2>
+        <div class="item-grid">
+            {% for item in recent_items %}
+            <div class="item-card {% if item.item_type == 'lost' %}lost-card{% else %}found-card{% endif %}">
+                <h3 class="item-title">{{ item.title }}</h3>
+                <p><strong>{% if item.item_type == 'lost' %} {{ t['lost_near'] }} {% else %} {{ t['found_near'] }} {% endif %}:</strong> {{
+                    item.location }}</p>
+                <p><strong>{{ t['description_tr'] }}:</strong> {{ item.description }}</p>
+                <p><strong>{{ t['date_tr'] }} {% if item.item_type == 'lost' %}{{ t['lost_tr'] }}{% else %}{{ t['found_tr'] }}{% endif %}:</strong> {{
+                    item.date_reported.strftime('%m/%d/%Y') }}</p>
+                <a href="{{ url_for('routes.message_user', user_id=item.user_id) }}" class="contact-button">{{ t['contact'] }}</a>
             </div>
-            <div class="form-group">
-                <label for="locationLost">Last Seen Location:</label>
-                <input type="text" id="locationLost" required>
-            </div>
-            <div class="form-group">
-                <label for="descriptionLost">Description:</label>
-                <textarea id="descriptionLost" rows="4"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="contactLost">Your Contact Info:</label>
-                <input type="text" id="contactLost" placeholder="Email or Phone" required>
-            </div>
-            <button type="submit">Submit Lost Report</button>
-        </form>
-    </section>
-
-    <section id="found-items" class="items-display-section">
-        <h2>Recently Found Items</h2>
-        <div class="filter-sort">
-            <input type="text" id="itemSearch" placeholder="Search items...">
-            <select id="sortItems">
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-            </select>
+            {% endfor %}
         </div>
-        <div id="foundItemsList" class="item-grid">
-            <p>No found items to display yet. Check back soon!</p>
-        </div>
-        <button id="loadMoreFound">Load More</button>
+      
+<button id="loadMoreFound">Load More</button>
 
-        <ul id="found-items" style="display: none;">
-  <li class="found-item">Black Jacket — Found at Library</li>
-  <li class="found-item">Red Flask — Found in Hallway</li>
-  <li class="found-item">Toyota Car Keys — Found on the Ground</li>
-  <li class="found-item">Bluetooth Earbuds Case — Found in Music Practice Room</li>
-  <li class="found-item">White iPhone — Found near the Gym</li>
+<ul id="found-items" style="display: none;">
+  <li class="found-item">Black Jacket – Found at Library</li>
+  <li class="found-item">Red Flask – Found in Hallway</li>
+  <li class="found-item">Toyota Car Keys – Found on the Ground</li>
+  <li class="found-item">Bluetooth Earbuds Case – Found in Music Practice Room</li>
+  <li class="found-item">White iPhone – Found near the Gym</li>
 </ul>
 
 
+
     </section>
 
-    <section id="report-found" class="form-section">
-        <h2>Report a Found Item</h2>
-        <form id="foundItemForm">
-            <div class="form-group">
-                <label for="itemNameFound">Item Name:</label>
-                <input type="text" id="itemNameFound" required>
-            </div>
-            <div class="form-group">
-                <label for="locationFound">Found Location:</label>
-                <input type="text" id="locationFound" required>
-            </div>
-            <div class="form-group">
-                <label for="descriptionFound">Description:</label>
-                <textarea id="descriptionFound" rows="4"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="contactFound">Your Contact Info:</label>
-                <input type="text" id="contactFound" placeholder="Email or Phone" required>
-            </div>
-            <button type="submit">Submit Found Report</button>
-        </form>
-    </section>
 
-    <section id="about">
-        <h2>About Find It</h2>
-        <p>Find It is a community-driven platform designed to help students and staff on campus reunite with their lost
-            belongings.</p>
+    <section id="about" style="background: #bf311a">
+        <h2 style="color: #fdb913">{{ t['find_it'] }}</h2>
+        <p style="color: #FFF">{{ t['find_it_description'] }}</p>
     </section>
 </main>
 

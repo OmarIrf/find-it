@@ -26,7 +26,7 @@ header {
     background: #333;
     color: #fff;
     padding: 1rem 0;
-    border-bottom: 3px solid #77aaff;
+    border-bottom: 3px solid #007bff;
 }
 
 header h1 {
@@ -83,7 +83,7 @@ header a:hover {
 
 #hero button {
     background: #fff;
-    color: #5cb85c;
+    color: #007bff;
     border: none;
     padding: 12px 25px;
     border-radius: 5px;
@@ -184,6 +184,13 @@ form button[type="submit"]:hover {
     text-align: center;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
+
+.item-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease-in-out;
+}
+
 
 .item-card h3 {
     margin-bottom: 10px;
@@ -304,6 +311,16 @@ footer {
     list-style: none;
 }
 
+.language-select {
+    padding: 5px 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: white;
+    margin-left: 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
 
 /* Styles for the "Find It" text in the top right, makes it clickable to home page. Can be replaced with logo once we have it */
 .logo-link {
@@ -363,10 +380,21 @@ footer {
     margin-bottom: 10px;
 }
 
-.contact {
-    font-weight: bold;
-    color: #333;
+.contact-button {
+  display: inline-block;
+  background-color: #007BFF;
+  color: white;
+  padding: 5px 10px;
+  text-decoration: none;
+  font-weight: bold;
+  border-radius: 8px;
+  transition: background-color 0.3s;
 }
+
+.contact-button:hover {
+  background-color: #0056b3;
+}
+
 
 .load-more-container {
     display: flex;
@@ -382,6 +410,8 @@ footer {
     border-radius: 5px;
     cursor: pointer;
 }
+
+
 
 .lost-card {
     background-color: #ffe6e6;

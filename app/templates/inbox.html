@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inbox.css') }}">
+
+<div class="inbox-container">
+    <div class="inbox-card">
+        <div class="inbox-header">
+            <h2>📥 Inbox</h2>
+            <a class="new-message-btn" href="{{ url_for('routes.view_items') }}">+ New Message</a>
+        </div>
+        <div class="inbox-list">
+            {% if conversations %}
+            {% for convo in conversations %}
+            <a href="{{ url_for('routes.message_user', user_id=convo.user.user_id) }}"
+                class="inbox-item {% if convo.unread %}unread{% endif %}">
+                <div class="inbox-avatar">
+                    {{ convo.user.name[0]|upper }}
+                </div>
+                <div class="inbox-content">
+                    <div class="inbox-name-time">
+                        <span class="inbox-name">{{ convo.user.name }}</span>
+                        <span class="inbox-time">{{ convo.last_message.timestamp.strftime('%m-%d-%Y') }}</span>
+                    </div>
+                    <div class="inbox-preview">{{ convo.last_message.content }}</div>
+                </div>
+                {% if convo.unread and convo.last_sender_id != session['user_id'] %}
+                <span class="red-dot"></span>
+                {% endif %}
+            </a>
+            {% endfor %}
+            {% else %}
+            <p class="empty-inbox">No conversations yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

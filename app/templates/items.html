@@ -8,8 +8,8 @@
     <h3 class="item-title">{{ item.title }}</h3>
     <p><strong>Lost Near:</strong> {{ item.location }}</p>
     <p><strong>Description:</strong> {{ item.description }}</p>
-    <p><strong>Date Reported:</strong> {{ item.date_reported.strftime('%m/%d/%Y') }}</p>
-    <p><strong>Contact:</strong> <span class="contact">{{ item.contact_info }}</span></p>
+    <p><strong>Date Lost:</strong> {{ item.date_reported.strftime('%m/%d/%Y') }}</p>
+    <a href="{{ url_for('routes.message_user', user_id=item.user_id) }}" class="contact-button">Contact</a>
   </div>
   {% endfor %}
 </div>
@@ -19,16 +19,12 @@
   {% for item in found_items %}
   <div class="item-card found-card">
     <h3 class="item-title">{{ item.title }}</h3>
-    <p><strong>Found At:</strong> {{ item.location }}</p>
+    <p><strong>Found Near:</strong> {{ item.location }}</p>
     <p><strong>Description:</strong> {{ item.description }}</p>
-    <p><strong>Date Reported:</strong> {{ item.date_reported.strftime('%m/%d/%Y') }}</p>
-    <p><strong>Contact:</strong> <span class="contact">{{ item.contact_info }}</span></p>
+    <p><strong>Date Found:</strong> {{ item.date_reported.strftime('%m/%d/%Y') }}</p>
+    <a href="{{ url_for('routes.message_user', user_id=item.user_id) }}" class="contact-button">Contact</a>
   </div>
   {% endfor %}
-</div>
-
-<div class="load-more-container">
-  <button class="load-more">Load More</button>
 </div>
 
 {% endblock %}
