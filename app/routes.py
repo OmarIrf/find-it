@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, session, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, session, request, abort, jsonify
 from .forms import LoginForm, RegisterForm, ItemForm
 from .models import db, User, Item, Message
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -7,13 +7,15 @@ from datetime import datetime
 from app import socketio
 from flask_socketio import emit, join_room
 from sqlalchemy.orm import joinedload
+from sqlalchemy import or_
+import re
 
 routes = Blueprint("routes", __name__)
 connected_users = set()
 # Index Route
 @routes.route("/")
 def index():
-    recent_items = Item.query.order_by(Item.date_reported.asc()).limit(9).all()
+    recent_items = Item.query.order_by(Item.date_reported.desc()).limit(9).all()
 
     lang = request.args.get("lang", "en")
     t = translations.get(lang, translations["en"])
@@ -213,23 +215,6 @@ translations = {
     }
 }
 
-@routes.route('/chat')
-def chat():
-    if 'user_name' not in session:
-        return redirect(url_for('routes.login'))
-    lang = request.args.get('lang', 'en')
-    t = translations.get(lang, translations['en'])
-    return render_template('chat.html', t=t, lang=lang, username=session['user_name'])
-
-
-@socketio.on('message')
-def handle_message(msg):
-    username = session.get('user_name', 'Unknown')
-    timestamp = datetime.now().strftime('%I:%M %p')  # e.g., "03:45 PM"
-    full_msg = f"[{timestamp}] {username}: {msg}"
-    emit('message', full_msg, broadcast=True)
-
-
 
 # Direct messaging for users
 @routes.route('/message/<int:user_id>', methods=['GET', 'POST'])
@@ -337,3 +322,61 @@ def inbox():
 
 
 
+# Chatbot
+
+@socketio.on('message')
+def handle_chat_message(msg):
+    msg_lower = msg.lower()
+    keywords = re.findall(r'\w+', msg_lower)
+
+    filters = [
+        *(Item.title.ilike(f"%{word}%") for word in keywords),
+        *(Item.description.ilike(f"%{word}%") for word in keywords),
+        *(Item.location.ilike(f"%{word}%") for word in keywords)
+    ]
+
+    matching_items = Item.query.filter(
+        or_(*filters)
+    ).filter_by(item_type='found').all()
+
+    if matching_items:
+        results = [f"{item.title} – Found at {item.location}" for item in matching_items]
+        reply = "Here’s what I found that might match:<br>" + "<br>".join(results)
+    else:
+        reply = "Sorry, I couldn’t find anything like that. You can report your lost item using the form."
+
+    emit('message', {
+        'user_msg': msg,
+        'bot_reply': reply
+    })
+
+
+
+@routes.route('/chat')
+def chat():
+    if 'user_name' not in session:
+        return redirect(url_for('routes.login'))
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    return render_template('chat.html', t=t, lang=lang, username=session['user_name'])
+
+
+@socketio.on('message')
+def handle_message(msg):
+    username = session.get('user_name', 'Unknown')
+    timestamp = datetime.now().strftime('%I:%M %p')  # e.g., "03:45 PM"
+    full_msg = f"[{timestamp}] {username}: {msg}"
+    emit('message', full_msg, broadcast=True)
+
+@routes.route('/api/found-items')
+def get_found_items():
+    items = Item.query.all()
+    results = [
+        {
+            "title": item.title.lower(),
+            "description": item.description.lower(),
+            "location": item.location.lower()
+        }
+        for item in items
+    ]
+    return jsonify(results)
