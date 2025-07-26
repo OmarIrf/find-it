@@ -10,6 +10,15 @@
     <p><strong>Description:</strong> {{ item.description }}</p>
     <p><strong>Date Lost:</strong> {{ item.date_reported.strftime('%m/%d/%Y') }}</p>
     <a href="{{ url_for('routes.message_user', user_id=item.user_id) }}" class="contact-button">Contact</a>
+
+    {% if session.get('user_id') == item.user_id %}
+    <form action="{{ url_for('routes.mark_returned', item_id=item.item_id) }}" method="POST">
+      <button type="submit" class="btn btn-danger btn-sm w-100"
+        style="background-color: #bf311a; color: white; margin-top: 10px;">
+        Mark as Returned
+      </button>
+    </form>
+    {% endif %}
   </div>
   {% endfor %}
 </div>
@@ -23,8 +32,16 @@
     <p><strong>Description:</strong> {{ item.description }}</p>
     <p><strong>Date Found:</strong> {{ item.date_reported.strftime('%m/%d/%Y') }}</p>
     <a href="{{ url_for('routes.message_user', user_id=item.user_id) }}" class="contact-button">Contact</a>
+
+    {% if session.get('user_id') == item.user_id %}
+    <form action="{{ url_for('routes.mark_returned', item_id=item.item_id) }}" method="POST">
+      <button type="submit" class="btn btn-danger btn-sm w-100"
+        style="background-color: #bf311a; color: white; margin-top: 10px;">
+        Mark as Returned
+      </button>
+    </form>
+    {% endif %}
   </div>
   {% endfor %}
 </div>
-
 {% endblock %}

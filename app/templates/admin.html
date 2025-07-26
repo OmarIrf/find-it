@@ -3,6 +3,7 @@
 <div class="admin-dashboard container">
   <h2>Admin Dashboard</h2>
 
+  <!-- users section-->
   <section class="admin-section">
     <h3>All Users</h3>
     <table class="admin-table">
@@ -13,6 +14,10 @@
           <th>Email</th>
           <th>Admin</th>
           <th>Toggle Role</th>
+          <th>Ban</th>
+          <th>Report Count</th>
+          <th>Message History</th>
+          <th>Reset Password</th>
         </tr>
       </thead>
       <tbody>
@@ -24,9 +29,29 @@
           <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
           <td>
             <form method="POST" action="{{ url_for('routes.toggle_admin', user_id=user.user_id) }}">
-              <button type="submit" class="admin-btn toggle">{{ 'Revoke Admin' if user.is_admin else 'Make Admin'
-                }}</button>
+              <button type="submit" class="admin-btn toggle">
+                {{ 'Revoke Admin' if user.is_admin else 'Make Admin' }}
+              </button>
             </form>
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('routes.toggle_ban', user_id=user.user_id) }}">
+              {% if user.banned_from_messaging %}
+              <button type="submit" class="admin-btn delete">Unban</button>
+              {% else %}
+              <button type="submit" class="admin-btn delete">Ban</button>
+              {% endif %}
+            </form>
+          </td>
+          <td>{{ report_counts.get(user.user_id, 0) }}</td>
+          <td>
+            <a href="{{ url_for('routes.view_user_messages', user_id=user.user_id) }}" class="admin-btn">
+              View Messages
+            </a>
+          </td>
+          <td>
+            <a href="{{ url_for('routes.reset_password', user_id=user.user_id) }}" class="admin-btn">Reset
+              Password</a>
           </td>
         </tr>
         {% endfor %}
@@ -34,6 +59,8 @@
     </table>
   </section>
 
+
+  <!-- reported items section-->
   <section class="admin-section">
     <h3>Reported Items</h3>
     <table class="admin-table">
@@ -43,6 +70,7 @@
           <th>Title</th>
           <th>Type</th>
           <th>Location</th>
+          <th>Description</th>
           <th>Reported By</th>
           <th>Reported On</th>
           <th>Actions</th>
@@ -55,6 +83,7 @@
           <td>{{ item.title }}</td>
           <td>{{ item.item_type.capitalize() }}</td>
           <td>{{ item.location }}</td>
+          <td>{{ item.description }}</td>
           <td>{{ item.user.name if item.user else 'Unknown' }}</td>
           <td>{{ item.date_reported.strftime('%m/%d/%Y') }}</td>
           <td>
@@ -76,7 +105,78 @@
       </tbody>
     </table>
   </section>
+
+  <!-- reported users section -->
+  <section class="admin-section">
+    <h3>Reported Users</h3>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in reported_users %}
+        <tr>
+          <td>{{ user.user_id }}</td>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('routes.unflag_user', user_id=user.user_id) }}"
+              style="display:inline-block;">
+              <button type="submit" class="admin-btn">Unflag</button>
+            </form>
+            <form method="POST" action="{{ url_for('routes.delete_user', user_id=user.user_id) }}"
+              style="display:inline-block;">
+              <button type="submit" class="admin-btn delete">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- flagged messages section-->
+  <section class="admin-section">
+    <h3>Flagged Messages</h3>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Sender</th>
+          <th>Recipient</th>
+          <th>Message</th>
+          <th>Timestamp</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for msg in messages %}
+        <tr>
+          <td>{{ msg.message_id }}</td>
+          <td>{{ msg.sender.name }}</td>
+          <td>{{ msg.recipient.name }}</td>
+          <td>{{ msg.content }}</td>
+          <td>{{ msg.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('routes.delete_message', message_id=msg.message_id) }}">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
 </div>
+
+
+
+
 
 <!-- modal bootsrap-->
 <div id="editModal" class="modal"
@@ -107,7 +207,6 @@
   </div>
 </div>
 
-
 <!-- javascript for modal admin edit button -->
 <script>
   function openModal(item) {
@@ -124,6 +223,7 @@
     document.getElementById("editModal").style.display = "none";
   }
 </script>
+
 
 <style>
   .admin-dashboard h2 {

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="admin-section">
+    <h2>Message History for {{ user.name }}</h2>
+    <a href="{{ url_for('routes.admin_dashboard') }}" class="admin-link">← Back to Admin Dashboard</a>
+
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>From</th>
+                <th>To</th>
+                <th>Message</th>
+                <th>Timestamp</th>
+                <th>Flagged</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for msg in messages %}
+            <tr>
+                <td>{{ msg.sender.name }}</td>
+                <td>{{ msg.recipient.name }}</td>
+                <td style="max-width: 300px; word-wrap: break-word;">{{ msg.content }}</td>
+                <td>{{ msg.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    {% if msg.flagged %}
+                        <span style="color: red; font-weight: bold;">Yes</span>
+                    {% else %}
+                        No
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align: center;">No messages found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

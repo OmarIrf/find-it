@@ -121,5 +121,15 @@
 }
 
 
+.report-btn {
+  background-color: #dc3545; /* Bootstrap red */
+  color: white;
+  border: none;
+  padding: 2px 6px;
+  font-size: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 4px;
+}
 
 

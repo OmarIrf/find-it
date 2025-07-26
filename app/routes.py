@@ -1,17 +1,21 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request, abort, jsonify
 from .forms import LoginForm, RegisterForm, ItemForm
-from .models import db, User, Item, Message
+from .models import db, User, Item, Message, UserReport
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
 from app import socketio
 from flask_socketio import emit, join_room
 from sqlalchemy.orm import joinedload
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 import re
 
 routes = Blueprint("routes", __name__)
 connected_users = set()
+
+PROFANITY_LIST = ['profanity'] 
+
+
 # Index Route
 @routes.route("/")
 def index():
@@ -25,6 +29,14 @@ def index():
         lang=lang,
         recent_items=recent_items
     )
+
+# Profanity filter
+def filter_profanity(text):
+    for word in PROFANITY_LIST:
+        pattern = re.compile(r'\b' + re.escape(word) + r'\b', re.IGNORECASE)
+        text = pattern.sub('****', text)
+    return text
+
 
 # Admin routes
 def admin_required(f):
@@ -128,9 +140,95 @@ def view_items():
 def admin_dashboard():
     users = User.query.all()
     items = Item.query.all()
+    flagged_messages = Message.query.filter_by(flagged=True).all()
+    reported_users = User.query.filter_by(reported=True).all()
+    report_counts = db.session.query(UserReport.reported_user_id,func.count(UserReport.reported_user_id)).group_by(UserReport.reported_user_id).all()
+    report_counts_dict = dict(report_counts)
     lang = request.args.get('lang', 'en')
     t = translations.get(lang, translations['en'])
-    return render_template('admin.html', users=users, items=items, t=t, lang=lang)
+    return render_template('admin.html', users=users, items=items, messages=flagged_messages, reported_users=reported_users, report_counts=report_counts_dict, t=t, lang=lang)
+
+@routes.route('/admin/reset_password/<int:user_id>', methods=['GET', 'POST'])
+@admin_required
+def reset_password(user_id):
+    user = User.query.get_or_404(user_id)
+
+    if request.method == 'POST':
+        new_password = request.form['new_password']
+        if len(new_password) < 6:
+            flash('Password must be at least 6 characters.', 'danger')
+            return redirect(request.url)
+
+        user.set_password(new_password)
+        db.session.commit()
+        flash(f"Password for {user.name} has been reset.", "success")
+        return redirect(url_for('routes.admin_dashboard'))
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    return render_template('admin_reset_password.html', user=user, t=t, lang=lang)
+
+
+@routes.route('/toggle_ban/<int:user_id>', methods=['POST'])
+@admin_required
+def toggle_ban(user_id):
+    user = User.query.get_or_404(user_id)
+    user.banned_from_messaging = not user.banned_from_messaging
+    db.session.commit()
+    return redirect(url_for('routes.admin_dashboard'))
+
+@routes.route('/admin/user_messages/<int:user_id>')
+@admin_required
+def view_user_messages(user_id):
+    user = User.query.get_or_404(user_id)
+    messages = Message.query.filter(
+        (Message.sender_id == user_id) | (Message.recipient_id == user_id)
+    ).order_by(Message.timestamp.desc()).all()
+    lang = request.args.get('lang', 'en')
+    t = translations.get(lang, translations['en'])
+    
+    return render_template('admin_user_messages.html', user=user, messages=messages, t=t, lang=lang)
+
+
+@routes.route('/admin/delete_message/<int:message_id>', methods=['POST'])
+@admin_required
+def delete_message(message_id):
+    if 'user_id' not in session:
+        return redirect(url_for('routes.login'))
+
+    user = User.query.get(session['user_id'])
+    if not user or not user.is_admin:
+        abort(403)
+
+    message = Message.query.get_or_404(message_id)
+    db.session.delete(message)
+    db.session.commit()
+    flash('Message deleted successfully.', 'success')
+    return redirect(url_for('routes.admin_dashboard'))
+
+@routes.route('/admin/unflag_user/<int:user_id>', methods=['POST'])
+@admin_required
+def unflag_user(user_id):
+    if 'user_id' not in session:
+        return redirect(url_for('routes.login'))
+    user = User.query.get_or_404(user_id)
+    user.reported = False
+    db.session.commit()
+    flash('User has been unflagged.', 'success')
+    return redirect(url_for('routes.admin_dashboard'))
+
+
+@routes.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+@admin_required
+def delete_user(user_id):
+    if 'user_id' not in session:
+        return redirect(url_for('routes.login'))
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    flash('User deleted successfully.', 'success')
+    return redirect(url_for('routes.admin_dashboard'))
+
+
 
 @routes.route('/admin/toggle/<int:user_id>', methods=["POST"])
 @admin_required
@@ -163,6 +261,8 @@ def edit_item(item_id):
     db.session.commit()
     flash("Item updated successfully.", "success")
     return redirect(url_for("routes.admin_dashboard"))
+
+
 
 @routes.route('/code-of-conduct')
 def code_of_conduct():
@@ -224,15 +324,21 @@ def message_user(user_id):
 
     recipient = User.query.get_or_404(user_id)
     sender_id = session['user_id']
+    sender = User.query.get_or_404(sender_id)
+    if sender.banned_from_messaging:
+        flash('You are banned from sending messages.')
+        return redirect(url_for('routes.inbox'))
 
     if request.method == 'POST':
-        content = request.form['content']
-        message = Message(sender_id=sender_id, recipient_id=recipient.user_id, content=content)
+        content = request.form['content'].strip()
+        filtered_content = filter_profanity(content)
+
+        message = Message(sender_id=sender_id, recipient_id=recipient.user_id, content=filtered_content)
         db.session.add(message)
         db.session.commit()
         update_unread_count()  # Refresh unread counter after sending
         return redirect(url_for('routes.message_user', user_id=user_id))
-
+ 
     # Fetch message history
     messages = Message.query.filter(
         ((Message.sender_id == sender_id) & (Message.recipient_id == recipient.user_id)) |
@@ -380,3 +486,53 @@ def get_found_items():
         for item in items
     ]
     return jsonify(results)
+
+
+@routes.route('/mark-returned/<int:item_id>', methods=['POST'])
+def mark_returned(item_id):
+    item = Item.query.get_or_404(item_id)
+    
+    if 'user_id' not in session or session['user_id'] != item.user_id:
+        return "Unauthorized", 403
+
+    db.session.delete(item)
+    db.session.commit()
+    return redirect(url_for('routes.index'))
+
+@routes.route('/report/<int:message_id>', methods=['POST'])
+def report_message(message_id):
+    if 'user_id' not in session:
+        return redirect(url_for('routes.login'))  
+
+    message = Message.query.get_or_404(message_id)
+    message.flagged = True
+    db.session.commit()
+    flash('Message has been reported to admins.', 'info')
+    return redirect(url_for('routes.inbox'))
+
+@routes.route('/report_user/<int:user_id>', methods=['POST'])
+def report_user(user_id):
+    if 'user_id' not in session:
+        return redirect(url_for('routes.login'))
+
+    reporter_id = session['user_id']
+
+    # Optional: prevent duplicate report by same user
+    existing = UserReport.query.filter_by(reporter_id=reporter_id, reported_user_id=user_id).first()
+    if existing:
+        flash('You have already reported this user.', 'warning')
+        return redirect(request.referrer or url_for('routes.inbox'))
+
+    # Create a new report entry
+    report = UserReport(reporter_id=reporter_id, reported_user_id=user_id)
+    db.session.add(report)
+
+    # Optionally mark reported=True for visual admin cue
+    user = User.query.get_or_404(user_id)
+    user.reported = True
+
+    db.session.commit()
+
+    flash('User has been reported to admins.', 'info')
+    return redirect(request.referrer or url_for('routes.inbox'))
+

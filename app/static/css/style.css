@@ -366,6 +366,9 @@ footer {
 }
 
 .item-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     background-color: white;
     border: 1px solid #ddd;
     padding: 20px;
@@ -373,6 +376,17 @@ footer {
     border-radius: 10px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
+
+.lost-card {
+    background-color: #ffe6e6;
+    border-left: 5px solid red;
+}
+
+.found-card {
+    background-color: #e6ffe6;
+    border-left: 5px solid green;
+}
+
 
 .item-title {
     color: #007BFF;
@@ -409,18 +423,6 @@ footer {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-}
-
-
-
-.lost-card {
-    background-color: #ffe6e6;
-    border-left: 5px solid red;
-}
-
-.found-card {
-    background-color: #e6ffe6;
-    border-left: 5px solid green;
 }
 
 /* Updated Styles for Code of Conduct page */
@@ -493,4 +495,43 @@ footer {
     .code-of-conduct h3 {
         font-size: 1.2rem;
     }
+}
+
+.admin-section {
+    padding: 20px;
+}
+
+.admin-link {
+    display: inline-block;
+    margin-bottom: 15px;
+    color: #5c1bd9;
+    font-weight: bold;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+.admin-table th, .admin-table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.admin-input {
+    padding: 8px;
+    width: 250px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.admin-btn.small {
+    padding: 6px 10px;
+    font-size: 0.9em;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
 }

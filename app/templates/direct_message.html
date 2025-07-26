@@ -5,7 +5,16 @@
 <div class="dm-wrapper">
     <div class="dm-container">
         <div class="dm-header">
-            <h2>{{ recipient.name }}</h2>
+            <h2 style="display: flex; align-items: center; gap: 10px;">
+                {{ recipient.name }}
+                <form method="POST" action="{{ url_for('routes.report_user', user_id=recipient.user_id) }}"
+                    style="margin: 0;">
+                    <button type="submit" title="Report User"
+                        style="background: none; border: none; cursor: pointer; font-size: 24px; color: #dc3545; padding-left: 0;">
+                        ⚠️
+                    </button>
+                </form>
+            </h2>
             <a href="{{ url_for('routes.inbox') }}" class="back-to-inbox">← Inbox</a>
         </div>
 
@@ -14,18 +23,29 @@
             <div class="chat-bubble {% if msg.sender_id == session['user_id'] %}sent{% else %}received{% endif %}">
                 <div>{{ msg.content }}</div>
                 <span class="chat-time">{{ msg.timestamp.strftime('%I:%M %p') }}</span>
+
+                {% if msg.sender_id != session['user_id'] and not msg.flagged %}
+                <form method="POST" action="{{ url_for('routes.report_message', message_id=msg.message_id) }}"
+                    style="margin-top: 5px;">
+                    <button type="submit" class="report-btn"
+                        style=" background-color: #dc3545; border: none; padding: 2px 6px; font-size: 10px; border-radius: 4px; cursor: pointer; margin-top: 4px;">Report</button>
+                </form>
+                {% elif msg.flagged and msg.sender_id != session['user_id'] %}
+                <small style="color: green; font-size: 10px;">Reported</small>
+                {% endif %}
             </div>
+
             {% endfor %}
         </div>
 
-<form method="POST" class="dm-input">
-    <div class="dm-textarea-wrapper">
-        <textarea name="content" required placeholder="Message..."></textarea>
-    </div>
-    <div class="dm-send-wrapper">
-        <button type="submit">Send</button>
-    </div>
-</form>
+        <form method="POST" class="dm-input">
+            <div class="dm-textarea-wrapper">
+                <textarea name="content" required placeholder="Message..."></textarea>
+            </div>
+            <div class="dm-send-wrapper">
+                <button type="submit">Send</button>
+            </div>
+        </form>
 
 
     </div>
