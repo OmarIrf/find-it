@@ -86,7 +86,7 @@
   </ul>
 
   <blockquote>
-    “FindIt A simple way to find lost items.”
+    “FindIt A simple way to find lost items!.”
   </blockquote>
 
 </body>
